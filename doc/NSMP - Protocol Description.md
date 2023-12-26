@@ -26,10 +26,6 @@ COBS framing is used to separate messages in the stream - 0x00 represents the en
 
 The byte value 0x00 is used to indicate the end of a frame, therefore it can be referred to as the frame delimiter. Any zero bytes in the data are encoded using COBS.
 
-### Why not use a start and end byte?
-
-COBS encoding is relatively simple, and has a deterministic decoding algorithm.
-
 ## Header
 
 Byte Number | Description

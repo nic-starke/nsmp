@@ -4,6 +4,11 @@
 		"nsmp_parser.h": "c",
 		"nsmp.h": "c",
 		"nsmp_msg.h": "c",
-		"cobs.h": "c"
+		"cobs.h": "c",
+		"stddef.h": "c",
+		"types.h": "c",
+		"inttypes.h": "c",
+		"stdio.h": "c",
+		"stdint-gcc.h": "c"
 	}
 }
