@@ -1,7 +1,7 @@
 # Nic's Simple (Serial) Messaging Protocol
 
 A simple extended star-topology serial messaging protocol designed for constrained systems (embedded).
-In peer-to-peer connections no broker is used. When more than 2 peers are detected in the network then a broker is assigned.
+In peer-to-peer connections no broker is used. When more than 2 peers are detected in the network then a broker is elected.
 
 ## Features / Spec
 
@@ -17,16 +17,18 @@ In peer-to-peer connections no broker is used. When more than 2 peers are detect
 
 ## Frames
 
+COBS framing is used to separate messages in the stream - 0x00 represents the end of a message.
 
-[Sync Byte] [Header] [Data (optional)] [Padding]
+[0x00] [Header] [Data (optional)] [Padding]
 
 
-## Sync Byte
+## Frame Delimiter
 
-The sync byte used to separate messages in the stream.
-If no escape sequence is used then the parser interprets it as a sync byte.
-If there is an escape sequence (stuffing byte) then the parser interprets it as data in the message.
+The byte value 0x00 is used to indicate the end of a frame, therefore it can be referred to as the frame delimiter. Any zero bytes in the data are encoded using COBS.
 
+### Why not use a start and end byte?
+
+COBS encoding is relatively simple, and has a deterministic decoding algorithm.
 
 ## Header
 
