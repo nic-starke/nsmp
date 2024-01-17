@@ -9,6 +9,7 @@
 		"types.h": "c",
 		"inttypes.h": "c",
 		"stdio.h": "c",
-		"stdint-gcc.h": "c"
+		"stdint-gcc.h": "c",
+		"printf.h": "c"
 	}
 }
