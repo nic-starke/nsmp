@@ -1,5 +1,19 @@
 Language: Cpp
 BasedOnStyle: llvm
+
+# Misc
+ColumnLimit: 80
+BitFieldColonSpacing: Both
+
+# Short / One-line blocks
+AllowShortBlocksOnASingleLine: Always
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortEnumsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: Never
+
+# Alignment
+PointerAlignment: Left
 AlignAfterOpenBracket: Align
 AlignConsecutiveAssignments: AcrossComments
 AlignConsecutiveBitFields: AcrossEmptyLinesAndComments
@@ -7,20 +21,29 @@ AlignConsecutiveDeclarations: AcrossComments
 AlignConsecutiveMacros: AcrossComments
 AlignEscapedNewlines: Right
 AlignOperands: true
-AlignTrailingComments: true
-AllowShortBlocksOnASingleLine: Always
-AllowShortCaseLabelsOnASingleLine: true
-AllowShortEnumsOnASingleLine: false
-AllowShortFunctionsOnASingleLine: None
-AllowShortIfStatementsOnASingleLine: Never
-BitFieldColonSpacing: Both
+
+# Braces
 BreakBeforeBraces: Attach
-ColumnLimit: 80
-MaxEmptyLinesToKeep: 1
-PointerAlignment: Left
-ReflowComments: true
+
+# Includes
 SortIncludes: false
+
+# Indentation
+UseTab: Always
 TabWidth: 2
 IndentWidth: 2
 IndentCaseLabels: true
-UseTab: Always
+
+# Whitespace
+MaxEmptyLinesToKeep: 1
+SpacesInParentheses: false
+InsertNewlineAtEOF: true
+
+# Comments
+ReflowComments: true
+AlignTrailingComments:
+  Kind: Always
+  OverEmptyLines: 1
+SpacesInLineCommentPrefix: 
+ Maximum: 1
+ Minimum: 1

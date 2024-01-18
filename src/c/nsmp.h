@@ -10,8 +10,23 @@
 #include "stddef.h"
 
 #include "nsmp_err.h"
+#include "nsmp_cfg.h"
 
 /* -------------------------------- Defines --------------------------------- */
+
+/* Macro to calculate NSMP queue length based on:
+	 n - number of messages in the queue
+	 p - to maximum payload length (user-defined)
+
+	 The queue length is calculated as follows:
+	 number of messages * (nsmp header + user payload) + (2 * number of messages)
+
+	 The last term (2*n) is used to store the size of the payload in each message,
+	 which is a 16-bit value.
+*/
+#define NSMP_QUEUE_LEN(n, p) ((n) * (p + sizeof(nsmp_hdr_s)) + (n))
+#define NSMP_MAX_MSG_LEN		 (sizeof(nsmp_hdr_s) + NSMP_MAX_PAYLOAD_LEN)
+
 /* -------------------------------- Externs --------------------------------- */
 /* -------------------------------- Enums ----------------------------------- */
 
@@ -30,21 +45,35 @@ typedef struct __attribute__((packed)) {
 } nsmp_ctrl_s;
 
 typedef struct __attribute__((packed)) {
-	nsmp_ctrl_s ctl;
-	uint8_t			dst;
-	uint8_t			src;
-	uint8_t			crc8;
+	nsmp_ctrl_s ctl;	/* Control bits */
+	uint8_t			dst;	/* Destination address */
+	uint8_t			src;	/* Source address */
+	uint8_t			crc8; /* CRC8 checksum */
+	uint16_t		len;	/* Length of the data payload */
 } nsmp_hdr_s;
 
 typedef struct __attribute__((packed)) {
-	nsmp_hdr_s hdr;
-	uint16_t	 len; /* Length of the data payload */
-	uint8_t*	 data;
+	nsmp_hdr_s hdr;	 /* NSMP header */
+	uint8_t*	 data; /* Pointer to the data payload */
 } nsmp_msg_s;
 
 typedef struct {
-	uint32_t (*get_time_ms)(void); /* function pointer - get system time */
+	// uint32_t (*get_time_ms)(void); /* User function - get system time */
 } nsmp_cfg_s;
+
+typedef struct nsmp_netif_s {
+	struct nsmp_netif_s* next;				/* Pointer to next interface */
+	unsigned int				 id;					/* Interface ID */
+	uint8_t							 addr;				/* NSMP address */
+	uint8_t buffer[NSMP_MAX_MSG_LEN]; /* Buffer for outgoing message */
+
+	/* RX callback function - user must copy the message before returning */
+	int (*receive)(nsmp_msg_s* msg);
+
+	/* TX function - will be called when a nsmp_send is requested for the
+	specified interface */
+	int (*transmit)(uint8_t* buffer, size_t len); /* Low-level TX for interface */
+} nsmp_netif_s;
 
 /* -------------------------------- Declarations ---------------------------- */
 /* -------------------------------- Globals --------------------------------- */
