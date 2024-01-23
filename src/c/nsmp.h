@@ -11,6 +11,7 @@
 
 #include "nsmp_err.h"
 #include "nsmp_cfg.h"
+#include "nsmp_netif.h"
 
 /* -------------------------------- Defines --------------------------------- */
 
@@ -32,7 +33,13 @@
 
 enum {
 	NSMP_MSG_TYPE_USER,
+
+	NSMP_MSG_TYPE_DISCOVERY,
 	NSMP_MSG_TYPE_NB,
+
+#if (NSMP_MSG_TYPE_NB >= 32)
+#error "NSMP_MSG_TYPE_NB too large!"
+#endif
 };
 
 /* -------------------------------- Structs --------------------------------- */
@@ -56,24 +63,6 @@ typedef struct __attribute__((packed)) {
 	nsmp_hdr_s hdr;	 /* NSMP header */
 	uint8_t*	 data; /* Pointer to the data payload */
 } nsmp_msg_s;
-
-typedef struct {
-	// uint32_t (*get_time_ms)(void); /* User function - get system time */
-} nsmp_cfg_s;
-
-typedef struct nsmp_netif_s {
-	struct nsmp_netif_s* next;				/* Pointer to next interface */
-	unsigned int				 id;					/* Interface ID */
-	uint8_t							 addr;				/* NSMP address */
-	uint8_t buffer[NSMP_MAX_MSG_LEN]; /* Buffer for outgoing message */
-
-	/* RX callback function - user must copy the message before returning */
-	int (*receive)(nsmp_msg_s* msg);
-
-	/* TX function - will be called when a nsmp_send is requested for the
-	specified interface */
-	int (*transmit)(uint8_t* buffer, size_t len); /* Low-level TX for interface */
-} nsmp_netif_s;
 
 /* -------------------------------- Declarations ---------------------------- */
 /* -------------------------------- Globals --------------------------------- */

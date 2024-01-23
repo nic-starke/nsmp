@@ -10,6 +10,22 @@
 		"inttypes.h": "c",
 		"stdio.h": "c",
 		"stdint-gcc.h": "c",
-		"printf.h": "c"
+		"printf.h": "c",
+		"unity.h": "c",
+		"termios.h": "c",
+		"fcntl.h": "c",
+		"stdlib.h": "c",
+		"unistd.h": "c",
+		"nsmp_linux.h": "c",
+		"signal.h": "c",
+		"time.h": "c",
+		"termios-baud.h": "c",
+		"nsmp_err.h": "c",
+		"*.tcc": "c",
+		"string_view": "c",
+		"algorithm": "c",
+		"random": "c",
+		"limits": "c",
+		"numeric": "c"
 	}
 }

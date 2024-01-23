@@ -6,19 +6,9 @@
 #pragma once
 /* -------------------------------- Includes -------------------------------- */
 
+#include "nsmp.h"
+
 /* -------------------------------- Defines --------------------------------- */
-
-#define NSMP_MAX_PAYLOAD_LEN (255)
-
-#if (NSMP_MAX_PAYLOAD_LEN > (UINT16_MAX))
-#error "NSMP_MAX_PAYLOAD_LEN too large!"
-#endif
-
-#define NSMP_ENABLE_ERROR_PRINT (1)
-#define DEBUG
-
-#define NSMP_DISCOVERY_TIMEOUT (5000) /* timeout for discovery in ms */
-
 /* -------------------------------- Externs --------------------------------- */
 /* -------------------------------- Enums ----------------------------------- */
 /* -------------------------------- Structs --------------------------------- */
@@ -26,3 +16,5 @@
 /* -------------------------------- Globals --------------------------------- */
 /* -------------------------------- Locals ---------------------------------- */
 /* -------------------------------- Functions ------------------------------- */
+
+int nsmp_termios_init(const char* dev, int baudrate);

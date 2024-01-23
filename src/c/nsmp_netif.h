@@ -6,23 +6,43 @@
 #pragma once
 /* -------------------------------- Includes -------------------------------- */
 
+#include "stddef.h"
+#include "stdint.h"
+
 /* -------------------------------- Defines --------------------------------- */
-
-#define NSMP_MAX_PAYLOAD_LEN (255)
-
-#if (NSMP_MAX_PAYLOAD_LEN > (UINT16_MAX))
-#error "NSMP_MAX_PAYLOAD_LEN too large!"
-#endif
-
-#define NSMP_ENABLE_ERROR_PRINT (1)
-#define DEBUG
-
-#define NSMP_DISCOVERY_TIMEOUT (5000) /* timeout for discovery in ms */
-
 /* -------------------------------- Externs --------------------------------- */
 /* -------------------------------- Enums ----------------------------------- */
 /* -------------------------------- Structs --------------------------------- */
+
+struct nsmp_netif_ctx_s;
+struct nsmp_netif_drv_s;
+
+typedef struct {
+	int (*init)(void);
+	int (*open)(void);
+	int (*close)(void);
+	int (*transmit)(uint8_t* buffer, size_t num_tx);
+	int (*receive)(uint8_t* buffer, size_t buf_len, size_t* num_rx);
+} nsmp_netif_drv_s;
+
+typedef struct {
+	uint8_t*		 tx_buf;
+	uint8_t*		 rx_buf;
+	const size_t tx_len;
+	const size_t rx_len;
+} nsmp_netif_ctx_s;
+
+typedef struct nsmp_netif_s {
+	uint8_t									id;
+	nsmp_netif_drv_s* const drv;
+	nsmp_netif_ctx_s* const ctx;
+	nsmp_netif_s*						next;
+} nsmp_netif_s;
+
 /* -------------------------------- Declarations ---------------------------- */
+
+int nsmp_netif_register(nsmp_netif_s* netif);
+
 /* -------------------------------- Globals --------------------------------- */
 /* -------------------------------- Locals ---------------------------------- */
 /* -------------------------------- Functions ------------------------------- */

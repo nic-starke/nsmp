@@ -3,22 +3,11 @@
 /*                      https://github.com/nic-starke/nsmp                    */
 /*                         SPDX-License-Identifier: MIT                       */
 /* -------------------------------------------------------------------------- */
-#pragma once
 /* -------------------------------- Includes -------------------------------- */
 
+#include "nsmp_linux.h"
+
 /* -------------------------------- Defines --------------------------------- */
-
-#define NSMP_MAX_PAYLOAD_LEN (255)
-
-#if (NSMP_MAX_PAYLOAD_LEN > (UINT16_MAX))
-#error "NSMP_MAX_PAYLOAD_LEN too large!"
-#endif
-
-#define NSMP_ENABLE_ERROR_PRINT (1)
-#define DEBUG
-
-#define NSMP_DISCOVERY_TIMEOUT (5000) /* timeout for discovery in ms */
-
 /* -------------------------------- Externs --------------------------------- */
 /* -------------------------------- Enums ----------------------------------- */
 /* -------------------------------- Structs --------------------------------- */

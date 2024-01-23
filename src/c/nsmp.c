@@ -14,6 +14,7 @@
 #define MAX_PEERS				 (32)
 #define PROTOCOL_VERSION (1)
 #define BROADCAST_ADDR	 (0xFF)
+#define INVALID_ADDR		 (0xFE)
 
 /* -------------------------------- Externs --------------------------------- */
 /* -------------------------------- Enums ----------------------------------- */
@@ -111,7 +112,7 @@ int nsmp_receive(uint8_t* buffer, size_t len, uint_t netif_id) {
 	}
 }
 
-int nsmp_new_interface(nsmp_netif_s* netif) {
+int nsmp_add_interface(nsmp_netif_s* netif) {
 	RETURN_IF_NULL(netif);
 	RETURN_IF_NULL(netif->transmit);
 	RETURN_IF_NULL(netif->receive);
@@ -129,6 +130,8 @@ int nsmp_new_interface(nsmp_netif_s* netif) {
 
 	netif->id = tmp->id + 1;
 	tmp->next = netif;
+
+	netif->addr = INVALID_ADDR;
 	return NSMP_OK;
 }
 

@@ -19,9 +19,14 @@
 	E(NSMP_ERR_BAD_VER, "Bad protocol version")                                  \
 	E(NSMP_ERR_BAD_CFG, "Bad configuration")                                     \
 	E(NSMP_ERR_BAD_ADDR, "Bad address")                                          \
+	E(NSMP_ERR_BAD_FILEDESC, "Bad file descriptor")                              \
+	E(NSMP_ERR_BAD_BAUD, "Bad baudrate")                                         \
 	E(NSMP_ERR_BAD_TIME_FUNCTION, "Bad time function")                           \
 	E(NSMP_ERR_NETIF_NOT_FOUND, "Interface not found")                           \
 	E(NSMP_ERR_COBS_ENCODE, "COBS encoding error")                               \
+	E(NSMP_ERR_EXTERNAL, "External error")                                       \
+	E(NSMP_ERR_TRANSMIT, "Transmit error")                                       \
+	E(NSMP_ERR_RECEIVE, "Receive error")                                         \
 	E(NSMP_ERR_NULL_PTR, "Null pointer")
 
 #define E(code, str) code,
@@ -47,9 +52,7 @@ typedef enum {
 		static const char* err_strings[] = {ERROR_DEFINITIONS};
 		#undef E
 
-		#define printerr(e)                                                         \
-		if (e != NSMP_OK) 																													\
-			fprintf(stderr, "%s:%d: %d - %s\n", __FILE__, __LINE__, e, err_strings[e])
+		#define printerr(e) fprintf(stderr, "%s:%d: %d - %s\n", __FILE__, __LINE__, e, err_strings[e])
 
 	#endif /* DEBUG */
 
