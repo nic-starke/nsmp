@@ -5,14 +5,8 @@
 /* -------------------------------------------------------------------------- */
 /* -------------------------------- Includes -------------------------------- */
 
-#include <stdio.h>
 #include <stdlib.h>
-#include <fcntl.h>
-#include <unistd.h>
-
 #include <signal.h>
-#include <time.h>
-#include <string.h>
 #include <stdbool.h>
 
 #include "nsmp_linux.h"
