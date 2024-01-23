@@ -33,11 +33,12 @@ static uint8_t						 s_rx_buf[NSMP_MAX_MSG_LEN] = {0};
 /* -------------------------------- Functions ------------------------------- */
 
 /**
- * @brief
+ * @brief Main function - initializes the termios network interface, and then
+ * runs the main loop (which processes incoming messages).
  *
- * @param argc
+ * @param argc Number of command line arguments
  * @param argv Command line arguments, 1 = device name, 2 = baudrate
- * @return int
+ * @return int Exit code
  */
 int main(int argc, char** argv) {
 	signal(SIGINT, sig_handler);
