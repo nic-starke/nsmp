@@ -21,6 +21,7 @@
 	E(NSMP_ERR_BAD_ADDR, "Bad address")                                          \
 	E(NSMP_ERR_BAD_FILEDESC, "Bad file descriptor")                              \
 	E(NSMP_ERR_BAD_BAUD, "Bad baudrate")                                         \
+	E(NSMP_ERR_BAD_SEQ, "Bad operating sequence")                                \
 	E(NSMP_ERR_BAD_TIME_FUNCTION, "Bad time function")                           \
 	E(NSMP_ERR_NETIF_NOT_FOUND, "Interface not found")                           \
 	E(NSMP_ERR_COBS_ENCODE, "COBS encoding error")                               \
@@ -78,6 +79,12 @@ typedef enum {
 
 #define RETURN_ERR_IF_FALSE(b, e)                                              \
 	if (!(b)) {                                                                  \
+		printerr(e);                                                               \
+		return e;                                                                  \
+	}
+
+#define RETURN_ERR_IF_TRUE(b, e)                                               \
+	if ((b)) {                                                                   \
 		printerr(e);                                                               \
 		return e;                                                                  \
 	}

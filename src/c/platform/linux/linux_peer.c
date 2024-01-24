@@ -3,93 +3,133 @@
 /*                      https://github.com/nic-starke/nsmp                    */
 /*                         SPDX-License-Identifier: MIT                       */
 /* -------------------------------------------------------------------------- */
+#pragma once
 /* -------------------------------- Includes -------------------------------- */
 
-#include <stdlib.h>
-#include <signal.h>
-#include <stdbool.h>
+#include <stdio.h>
+#include <termios.h>
+#include <fcntl.h>
+#include <inttypes.h>
+#include <unistd.h>
 
 #include "nsmp_linux.h"
 
 /* -------------------------------- Defines --------------------------------- */
 /* -------------------------------- Externs --------------------------------- */
-
-extern nsmp_netif_s nsmp_netif_linux_termios;
-
 /* -------------------------------- Enums ----------------------------------- */
 /* -------------------------------- Structs --------------------------------- */
 /* -------------------------------- Declarations ---------------------------- */
 
-static void sig_handler(int sig);
-static int	process_message(nsmp_msg_s* msg);
+static int validate_baudrate(int baudrate);
 
 /* -------------------------------- Globals --------------------------------- */
 /* -------------------------------- Locals ---------------------------------- */
 
-static nsmp_netif_s* const s_netif_termios = &nsmp_netif_linux_termios;
-static bool								 s_running			 = false;
-static uint8_t						 s_rx_buf[NSMP_MAX_MSG_LEN] = {0};
+static struct termios tty = {
+		.c_cflag = CS8 | CLOCAL |
+							 CREAD, /* 8-bit chars, ignore modem control, enable reading */
+		.c_iflag		 = IGNPAR, /* ignore parity errors */
+		.c_oflag		 = 0,			 /* no output flags */
+		.c_lflag		 = 0,			 /* no local flags */
+		.c_cc[VMIN]	 = 1,			 /* block until 1 byte is received */
+		.c_cc[VTIME] = 0,			 /* no timeout */
+};
 
 /* -------------------------------- Functions ------------------------------- */
 
-/**
- * @brief Main function - initializes the termios network interface, and then
- * runs the main loop (which processes incoming messages).
- *
- * @param argc Number of command line arguments
- * @param argv Command line arguments, 1 = device name, 2 = baudrate
- * @return int Exit code
- */
-int main(int argc, char** argv) {
-	signal(SIGINT, sig_handler);
-	signal(SIGTERM, sig_handler);
+int nsmp_linux_netif_init(nsmp_linux_netif_ctx_s* ctx) {
+	RETURN_IF_NULL(ctx);
+	RETURN_IF_NULL(ctx->dev);
+	RETURN_IF_TRUE(ctx->state != NSMP_PEER_STATE_UNINITIALIZED, NSMP_ERR_BAD_SEQ);
 
-	const char* dev			 = argv[1];
-	int					baudrate = atoi(argv[2]);
-
-	int ret = nsmp_termios_configure(dev, baudrate);
+	int ret = validate_baudrate(ctx->baud);
 	RETURN_IF_ERR(ret);
 
-	ret = nsmp_netif_register(s_netif_termios);
-	RETURN_IF_ERR(ret);
+	ctx->fd = open(ctx->dev, O_RDWR | O_NOCTTY | O_NONBLOCK);
 
-	ret = nsmp_discovery();
-	RETURN_IF_ERR(ret);
+	if (ctx->fd < 0) {
+		return NSMP_ERR_BAD_FILEDESC;
+	}
 
-	s_running = true;
-	do {
-		size_t num_rx = 0;
+	int ret = tcgetattr(ctx->fd, &tty);
 
-		ret = s_netif_termios->drv->receive(s_rx_buf, sizeof(s_rx_buf), &num_rx);
-		RETURN_IF_ERR(ret);
+	if (ret != 0) {
+		printf("Error from tcgetattr: %s\n", strerror(ret));
+		return NSMP_ERR_EXTERNAL;
+	}
 
-		ret = nsmp_parse(s_rx_buf, num_rx);
-		RETURN_IF_ERR(ret);
-	} while (s_running);
+	if (ret != NSMP_OK) {
+		printf("Invalid baudrate: %d\n", ctx->baud);
+		return ret;
+	}
 
-	return EXIT_SUCCESS;
+	cfsetispeed(&tty, ctx->baud);
+	cfsetospeed(&tty, ctx->baud);
+	tcsetattr(ctx->fd, TCSANOW, &tty);
+
+	ctx->state = NSMP_PEER_STATE_READY;
+
+	return NSMP_OK;
 }
 
-static int process_message(nsmp_msg_s* msg) {
-	RETURN_IF_NULL(msg);
+int nsmp_linux_netif_stop(nsmp_linux_netif_ctx_s* ctx) {
+	RETURN_IF_NULL(ctx);
 
-	static const char* msg_types[NSMP_MSG_TYPE_NB] = {
-			[NSMP_MSG_TYPE_USER]			= "User",
-			[NSMP_MSG_TYPE_DISCOVERY] = "Discovery",
-	};
-
-	if (msg->hdr.ctl.type < NSMP_MSG_TYPE_NB) {
-		printf("Received %s message from %d\n", msg_types[msg->hdr.ctl.type],
-					 msg->hdr.src);
-	} else {
-		printf("Received unknown message type from %d\n", msg->hdr.src);
+	if (ctx->fd >= 0) {
+		close(ctx->fd);
 	}
 
 	return NSMP_OK;
 }
 
-static void sig_handler(int sig) {
-	if (sig == SIGINT || sig == SIGTERM) {
-		s_running = false;
+int nsmp_linux_netif_transmit(void* netif_ctx, uint8_t* buffer, size_t num_tx) {
+	RETURN_IF_NULL(netif_ctx);
+	RETURN_IF_NULL(buffer);
+	RETURN_ERR_IF_TRUE(num_tx <= 0, NSMP_ERR_BAD_ARG);
+
+	nsmp_linux_netif_ctx_s* ctx		= (nsmp_linux_netif_ctx_s*)netif_ctx;
+	ssize_t									count = 0;
+
+	do {
+		int ret = write(ctx->fd, buffer + count, num_tx - count);
+		if (ret == -1) {
+			return NSMP_ERR_TRANSMIT;
+		} else {
+			count += (ssize_t)ret;
+		}
+
+	} while (count < num_tx);
+	return NSMP_OK;
+}
+
+int nsmp_linux_netif_receive(nsmp_linux_netif_ctx_s* ctx, uint8_t* buffer,
+														 size_t buf_len, size_t* num_rx) {
+	RETURN_IF_NULL(ctx);
+	RETURN_IF_NULL(buffer);
+	RETURN_IF_NULL(num_rx);
+	RETURN_ERR_IF_FALSE(buf_len <= 0, NSMP_ERR_BAD_ARG);
+	ssize_t ret = read(ctx->fd, buffer, buf_len);
+
+	if (ret == -1) {
+		return NSMP_ERR_RECEIVE;
+	}
+
+	*num_rx = (size_t)ret;
+	return NSMP_OK;
+}
+
+static int validate_baudrate(int baudrate) {
+	switch (baudrate) {
+		case 9600:
+		case 19200:
+		case 38400:
+		case 57600:
+		case 115200:
+		case 230400:
+		case 460800:
+		case 500000:
+		case 576000:
+		case 921600: return NSMP_OK;
+		default: return NSMP_ERR_BAD_BAUD;
 	}
 }

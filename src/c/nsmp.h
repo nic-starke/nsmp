@@ -42,6 +42,15 @@ enum {
 #endif
 };
 
+enum {
+	NSMP_PEER_STATE_UNINITIALIZED,
+	NSMP_PEER_STATE_READY,
+	NSMP_PEER_STATE_ACTIVE,
+	NSMP_PEER_STATE_ERROR,
+
+	NSMP_PEER_STATE_NB,
+};
+
 /* -------------------------------- Structs --------------------------------- */
 
 typedef struct __attribute__((packed)) {
