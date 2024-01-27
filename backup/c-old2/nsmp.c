@@ -61,6 +61,13 @@ int nsmp_send(nsmp_msg_s* msg, uint_t netif_id) {
 	RETURN_IF_NULL(msg);
 	RETURN_IF_ERR(get_netif(netif_id, netif));
 
+	/* set header fields */
+	msg->hdr.src				= netif->address;
+	msg->hdr.ctl.retry	= 0;
+	msg->hdr.ctl.reqres = 1;
+	msg->hdr.ctl.type		= NSMP_MSG_TYPE_USER;
+	msg->hdr.ctl.data		= (msg->data != NULL);
+
 	/* initialise the cobs encoder */
 	ret = cobs_encode_inc_begin(&netif->buffer, NSMP_MAX_MSG_LEN, &ctx);
 	RETURN_ERR_IF_FALSE(ret == COBS_RET_SUCCESS, NSMP_ERR_COBS_ENCODE);
@@ -80,6 +87,23 @@ int nsmp_send(nsmp_msg_s* msg, uint_t netif_id) {
 	RETURN_ERR_IF_FALSE(ret == COBS_RET_SUCCESS, NSMP_ERR_COBS_ENCODE);
 
 	RETURN_IF_ERR(netif->transmit(netif->buffer, enc_len));
+
+	return NSMP_OK;
+}
+
+inline int nsmp_broadcast(nsmp_msg_s* msg, uint_t netif_id) {
+	RETURN_IF_NULL(msg);
+	msg->hdr.dst = BROADCAST_ADDR;
+	return nsmp_send(msg, netif_id);
+}
+
+inline int nsmp_add_payload(nsmp_msg_s* msg, uint8_t* data, uint16_t len) {
+	RETURN_IF_NULL(msg);
+	RETURN_IF_NULL(data);
+	RETURN_ERR_IF_TRUE(0 >= len, NSMP_ERR_BAD_LEN);
+
+	msg->hdr.len = len;
+	msg->data		 = data;
 
 	return NSMP_OK;
 }

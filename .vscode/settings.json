@@ -27,6 +27,9 @@
 		"random": "c",
 		"limits": "c",
 		"numeric": "c",
-		"cstdlib": "c"
+		"cstdlib": "c",
+		"nsmp_netif.h": "c",
+		"nsmp_cfg.h": "c",
+		"nsmp_util.h": "c"
 	}
 }

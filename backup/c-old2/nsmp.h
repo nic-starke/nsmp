@@ -37,7 +37,7 @@ enum {
 	NSMP_MSG_TYPE_DISCOVERY,
 	NSMP_MSG_TYPE_NB,
 
-#if (NSMP_MSG_TYPE_NB >= 32)
+#if (NSMP_MSG_TYPE_NB >= 64)
 #error "NSMP_MSG_TYPE_NB too large!"
 #endif
 };
@@ -54,10 +54,9 @@ enum {
 /* -------------------------------- Structs --------------------------------- */
 
 typedef struct __attribute__((packed)) {
-	uint8_t data	 : 1; /* 0 = no data, 	1 = data */
 	uint8_t reqres : 1; /* 0 = response, 	1 = request */
 	uint8_t retry	 : 1; /* 0 = initial, 	1 = retransmit */
-	uint8_t type	 : 5; /* message type */
+	uint8_t type	 : 6; /* message type */
 } nsmp_ctrl_s;
 
 typedef struct __attribute__((packed)) {

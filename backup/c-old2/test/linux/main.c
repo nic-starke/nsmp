@@ -6,13 +6,11 @@
 /* -------------------------------- Includes -------------------------------- */
 
 #include "unity.h"
-#include "nsmp.h"
-#include "nsmp_cfg.h"
+#include "nsmp_linux.h"
 
 /* -------------------------------- Defines --------------------------------- */
 
-#define NB_PEERS (2)
-
+#define NB_INTERFACES (2)
 
 /* -------------------------------- Externs --------------------------------- */
 /* -------------------------------- Enums ----------------------------------- */
@@ -21,54 +19,42 @@
 /* -------------------------------- Globals --------------------------------- */
 /* -------------------------------- Locals ---------------------------------- */
 
-static nsmp_cfg_s cfg[NB_PEERS];
-static nsmp_netif_s netif[NB_PEERS];
+static nsmp_linux_netif_ctx_s s_ctx[NB_INTERFACES];
+static nsmp_netif_s						s_netif[NB_INTERFACES];
 
 /* -------------------------------- Functions ------------------------------- */
 
-void init_client(unsigned int id, nsmp_cfg_s* cfg, nsmp_netif_s* netif) {
-	TEST__PRINTF("Initialising client %d\n", netif->address);
+void setUp(void) {
+	TEST_PRINTF("Setting up\n");
 
-	if (id > NB_PEERS) {
-		TEST__PRINTF("ERROR: invalid peer id\n");
-		TEST_ABORT();
+	for (unsigned int i = 0; i < NB_INTERFACES; i++) {
+		const char* dev = "/dev/ttyUSB";
+		snprintf(s_ctx[i].dev, sizeof(s_ctx[i].dev), "%s%d", dev, i);
+		s_ctx[i].baud = 115200;
+
+		int status = nsmp_linux_netif_init(&s_ctx[i]);
+		TEST_ASSERT_EQUAL(NSMP_OK, status);
 	}
-	
-	int status = 0;
-
-	status = nsmp_init(&cfg[id]);
-	TEST_ASSERT_EQUAL(NSMP_OK, status);
-	
-	status = nsmp_add_interface(&netif[id]);
-	TEST_ASSERT_EQUAL(NSMP_OK, status);
 }
 
-void discovery(unsigned int id) {
-	if (id > NB_PEERS) {
-		TEST__PRINTF("ERROR: invalid peer id\n");
-		TEST_ABORT();
+void tearDown(void) {
+	TEST_PRINTF("Tearing down\n");
+
+	for (unsigned int i = 0; i < NB_INTERFACES; i++) {
+		int status = nsmp_linux_netif_stop(&s_ctx[i]);
+		TEST_ASSERT_EQUAL(NSMP_OK, status);
 	}
-
-	TEST__PRINTF("Peer %d: starting discovery\n", id);
-
-	int status = 0;
-
-	nsmp_msg_s msg = {
-		.hdr = {
-			.ctl = {
-				.data = 0,
-				.reqres = 1,
-				.type = NSMP_MSG_TYPE_DISCOVERY,
-			},
-			.dst = BROADCAST_ADDR,
-		},
-	};
-
-	uint32_t now = cfg[id].get_time_ms();
-
-	status = nsmp_send(&msg, netif[id].id);
-	TEST_ASSERT_EQUAL(NSMP_OK, status);
-
-	/* should receive discovery replies... */
 }
 
+void test_discovery(void) {
+	nsmp_netif_discovery(&s_netif[0]);
+}
+
+void test_send_broadcast(void) {
+	nsmp_msg_s msg			 = {0};
+	const char payload[] = "Hello World!";
+	int				 ret = nsmp_add_payload(&msg, (uint8_t*)payload, sizeof(payload));
+	TEST_ASSERT_EQUAL(NSMP_OK, ret);
+
+	ret = nsmp_broadcast(&msg, &s_netif[0]);
+}
