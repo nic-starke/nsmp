@@ -25,6 +25,7 @@
 	E(NSMP_ERR_EXTERNAL, "External error")                                       \
 	E(NSMP_ERR_TRANSMIT, "Transmit error")                                       \
 	E(NSMP_ERR_RECEIVE, "Receive error")                                         \
+	E(NSMP_ERR_ROUTE_EXISTS, "Route already exists")                             \
 	E(NSMP_ERR_NULL, "Null pointer")
 
 /* -------------------------------- Enums / Structs ------------------------- */
