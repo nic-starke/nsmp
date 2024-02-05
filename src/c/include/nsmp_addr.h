@@ -5,14 +5,17 @@
 /* -------------------------------------------------------------------------- */
 #pragma once
 /* -------------------------------- Includes -------------------------------- */
-#include <stddef.h>
 #include <stdint.h>
-#include "nsmp_err.h"
 /* -------------------------------- Defines / Externs ----------------------- */
+
+#define NSMP_MAX_NODES			(127u)
+#define NSMP_BROADCAST_ADDR (0xFFu)
+#define NSMP_INVALID_ADDR		(0xFEu)
+
 /* -------------------------------- Enums / Structs ------------------------- */
+
+typedef uint8_t nsmp_addr_t;
+
 /* -------------------------------- Declarations ---------------------------- */
-
-nsmp_err_e nsmp_parse(uint8_t* buf, size_t len);
-
 /* -------------------------------- Variables ------------------------------- */
 /* -------------------------------- Definitions ----------------------------- */

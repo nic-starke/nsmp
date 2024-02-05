@@ -7,7 +7,16 @@
 /* -------------------------------- Includes -------------------------------- */
 #include <stdint.h>
 #include "nsmp_util.h"
+#include "nsmp_netif.h"
 /* -------------------------------- Defines / Externs ----------------------- */
+
+#define NSMP_MAX_PAYLOAD_SIZE (255u) /* bytes */
+#define NSMP_MIN_PAYLOAD_SIZE (127u) /* bytes */
+
+enum {
+	NSMP_REQUEST	= 0,
+	NSMP_RESPONSE = 1
+};
 
 /* control bitfield */
 #define OFS_REQRES							(0)
@@ -16,12 +25,12 @@
 #define MSK_REQRES							(0x01)
 #define MSK_RETRY								(0x02)
 #define MSK_MSG_TYPE						(0xFC)
-#define CTL_SET_REQRES(hdr, rq) BF_SET(hdr, MSK_REQRES, OFS_REQRES, rq)
-#define CTL_SET_RETRY(hdr, rt)	BF_SET(hdr, MSK_RETRY, OFS_RETRY, rt)
-#define CTL_SET_TYPE(hdr, mt)		BF_SET(hdr, MSK_MSG_TYPE, OFS_MSG_TYPE, mt)
-#define CTL_GET_REQRES(hdr)			BF_GET(hdr, MSK_REQRES, OFS_REQRES)
-#define CTL_GET_RETRY(hdr)			BF_GET(hdr, MSK_RETRY, OFS_RETRY)
-#define CTL_GET_TYPE(hdr)				BF_GET(hdr, MSK_MSG_TYPE, OFS_MSG_TYPE)
+#define CTL_SET_REQRES(ctl, rq) BF_SET(ctl, MSK_REQRES, OFS_REQRES, rq)
+#define CTL_SET_RETRY(ctl, rt)	BF_SET(ctl, MSK_RETRY, OFS_RETRY, rt)
+#define CTL_SET_TYPE(ctl, mt)		BF_SET(ctl, MSK_MSG_TYPE, OFS_MSG_TYPE, mt)
+#define CTL_GET_REQRES(ctl)			BF_GET(ctl, MSK_REQRES, OFS_REQRES)
+#define CTL_GET_RETRY(ctl)			BF_GET(ctl, MSK_RETRY, OFS_RETRY)
+#define CTL_GET_TYPE(ctl)				BF_GET(ctl, MSK_MSG_TYPE, OFS_MSG_TYPE)
 
 /* -------------------------------- Enums / Structs ------------------------- */
 
@@ -32,7 +41,8 @@ enum {
 	NSMP_MSG_TYPE_NB,
 
 #if (NSMP_MSG_TYPE_NB > (MSK_MSG_TYPE >> OFS_MSG_TYPE))
-#error "NSMP_MSG_TYPE_NB too large!"
+#error                                                                         \
+		"To many message types, NSMP_MSG_TYPE_NB must fit in the control bitfield!"
 #endif
 };
 
@@ -45,8 +55,9 @@ typedef struct __attribute__((packed)) {
 } nsmp_hdr_s;
 
 typedef struct {
-	nsmp_hdr_s hdr;	 /* NSMP header */
-	uint8_t*	 data; /* Pointer to the data payload */
+	nsmp_hdr_s		hdr;	 /* NSMP header */
+	nsmp_netif_s* netif; /* Network interface */
+	uint8_t*			data;	 /* Pointer to the data payload */
 } nsmp_msg_s;
 
 /* -------------------------------- Declarations ---------------------------- */

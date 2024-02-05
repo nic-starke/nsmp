@@ -6,7 +6,6 @@
 #pragma once
 /* -------------------------------- Includes -------------------------------- */
 #include <stddef.h>
-
 #include "nsmp_err.h"
 #include "nsmp_msg.h"
 #include "nsmp_node.h"
