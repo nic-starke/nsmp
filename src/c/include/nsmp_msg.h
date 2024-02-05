@@ -63,7 +63,14 @@ typedef struct {
 /* -------------------------------- Declarations ---------------------------- */
 
 nsmp_err_e nsmp_msg_send(nsmp_msg_s* msg);
-nsmp_err_e nsmp_msg_broadcast(nsmp_msg_s* msg);
+
+/* broadcast on all interfaces */
+nsmp_err_e nsmp_msg_broadcast_all(nsmp_msg_s* msg);
+
+/* broadcast on all "other" interfaces (all except the interface set
+within the msg header) */
+nsmp_err_e nsmp_msg_broadcast_other(nsmp_msg_s* msg);
+
 nsmp_err_e nsmp_msg_add_payload(nsmp_msg_s* msg, uint8_t* payload, size_t len);
 
 /* -------------------------------- Variables ------------------------------- */

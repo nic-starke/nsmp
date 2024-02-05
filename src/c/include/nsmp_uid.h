@@ -5,18 +5,17 @@
 /* -------------------------------------------------------------------------- */
 #pragma once
 /* -------------------------------- Includes -------------------------------- */
-#include <stddef.h>
+#include <stdint.h>
 #include "nsmp_err.h"
-#include "nsmp_msg.h"
-#include "nsmp_node.h"
-#include "nsmp_netif.h"
-#include "nsmp_uid.h"
 /* -------------------------------- Defines / Externs ----------------------- */
-/* -------------------------------- Enums / Structs ------------------------- */
+/* -------------------------------- Types / Enums / Structs ----------------- */
+
+#define NSMP_UID_LEN 16
+
 /* -------------------------------- Declarations ---------------------------- */
 
-nsmp_err_e nsmp_init(void);
-nsmp_err_e nsmp_deinit(void);
+nsmp_err_e nsmp_uid_init(uint64_t seed);
+nsmp_err_e nsmp_uid_generate(char uid[NSMP_UID_LEN]);
 
 /* -------------------------------- Variables ------------------------------- */
 /* -------------------------------- Definitions ----------------------------- */

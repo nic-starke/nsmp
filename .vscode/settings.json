@@ -30,6 +30,8 @@
 		"cstdlib": "c",
 		"nsmp_netif.h": "c",
 		"nsmp_cfg.h": "c",
-		"nsmp_util.h": "c"
+		"nsmp_util.h": "c",
+		"uuid4.h": "c",
+		"nsmp_uid.h": "c"
 	}
 }

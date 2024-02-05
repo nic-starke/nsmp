@@ -3,20 +3,20 @@
 /*                      https://github.com/nic-starke/nsmp                    */
 /*                         SPDX-License-Identifier: MIT                       */
 /* -------------------------------------------------------------------------- */
-#pragma once
 /* -------------------------------- Includes -------------------------------- */
-#include <stddef.h>
-#include "nsmp_err.h"
-#include "nsmp_msg.h"
-#include "nsmp_node.h"
-#include "nsmp_netif.h"
-#include "nsmp_uid.h"
+#include "nsmp.h"
+#include "uuid4.h"
 /* -------------------------------- Defines / Externs ----------------------- */
-/* -------------------------------- Enums / Structs ------------------------- */
+/* -------------------------------- Types / Enums / Structs ----------------- */
 /* -------------------------------- Declarations ---------------------------- */
-
-nsmp_err_e nsmp_init(void);
-nsmp_err_e nsmp_deinit(void);
-
 /* -------------------------------- Variables ------------------------------- */
 /* -------------------------------- Definitions ----------------------------- */
+
+nsmp_err_e nsmp_init(void) {
+
+	if (nsmp_uid_init() != NSMP_OK) {
+		return NSMP_ERR_GURU_MEDITATION;
+	}
+
+	return NSMP_OK;
+}

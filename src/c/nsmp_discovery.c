@@ -22,13 +22,27 @@
 	should process any discovery responses it receives - and update its
 	local routing table.
 
+	If a discovery REQUEST is received:
+	- Reply with a discovery RESPONSE.
+	- Retransmit the request on all OTHER network interfaces.
+
+	If a discovery RESPONSE is received:
+	- Update the routing table with the source address and the network interface
+		used to receive the message.
+	- Retransmit the response back on the same network interface it was received
+	on, only if we have a cache of the UID from the original request.
+
+	Why is this important - it stops infinite retransmission loops.
+
 */
 
 /* -------------------------------- Includes -------------------------------- */
 #include <stddef.h>
+#include <stdbool.h>
 #include "nsmp_discovery.h"
 #include "nsmp_route.h"
 #include "nsmp_msg.h"
+#include "nsmp_uid.h"
 /* -------------------------------- Defines / Externs ----------------------- */
 /* -------------------------------- Enums / Structs ------------------------- */
 
@@ -62,7 +76,17 @@ nsmp_err_e nsmp_discover(void) {
 			CTL_SET_TYPE(msg.hdr.ctl, NSMP_MSG_TYPE_DISCOVERY);
 			CTL_SET_REQRES(msg.hdr.ctl, NSMP_REQUEST);
 
-			int ret = nsmp_msg_broadcast(&msg);
+			/* add a uid for this broadcast message */
+			char uid[NSMP_UID_LEN];
+			nsmp_uid_generate(uid);
+
+			int ret = nsmp_msg_add_payload(&msg, uid, NSMP_UID_LEN);
+			if (ret != NSMP_OK) {
+				s_state = DISCOVERY_STATE_IDLE;
+				return ret;
+			}
+
+			ret = nsmp_msg_broadcast(&msg);
 			if (ret != NSMP_OK) {
 				s_state = DISCOVERY_STATE_IDLE;
 				return ret;
@@ -93,7 +117,29 @@ nsmp_err_e nsmp_discover(void) {
 }
 
 nsmp_err_e nsmp_discovery_handler(nsmp_msg_s* msg) {
+	static char					 uid_cache[4][NSMP_UID_LEN] = {0};
+	static nsmp_netif_s* netif[4]										= {0};
+	static unsigned int	 last_uid										= 0;
+	static int					 seen_uid										= -1;
+	int									 ret												= NSMP_OK;
+
+	/* cache the uid and the network interface */
+	for (unsigned int i = 0; i < 4; i++) {
+		if (memcmp(uid_cache[i], msg->data, NSMP_UID_LEN) == 0) {
+			seen_uid = i;
+			break;
+		}
+
+		memcpy(uid_cache[last_uid], msg->data, NSMP_UID_LEN);
+		netif[last_uid] = msg->netif;
+		last_uid				= (last_uid + 1) % 4;
+	}
+
 	if (CTL_GET_REQRES(msg->hdr.ctl) == NSMP_REQUEST) {
+		if (seen_uid != -1) {
+			return NSMP_OK;
+		}
+
 		nsmp_msg_s reply = {0};
 		CTL_SET_TYPE(reply.hdr.ctl, NSMP_MSG_TYPE_DISCOVERY);
 		CTL_SET_REQRES(reply.hdr.ctl, NSMP_RESPONSE);
@@ -103,26 +149,26 @@ nsmp_err_e nsmp_discovery_handler(nsmp_msg_s* msg) {
 		/* the remote address will probably be INVALID_ADDR, but set it anyway */
 		reply.hdr.dst = msg->hdr.src;
 
-		int ret = nsmp_msg_send(&reply);
+		ret = nsmp_msg_send(&reply);
 		if (ret != NSMP_OK) {
 			return ret; /* TODO - handle the error, do not return it..*/
 		}
 
-		/* The core NSMP state-machine will retransmit the message
-		as it is a broadcast message, no need to do it here. */
+		/* broadcast message */
+		nsmp_msg_broadcast_other(&msg);
 
 	} else if (CTL_GET_REQRES(msg->hdr.ctl) == NSMP_RESPONSE) {
 
-		/* Only update the routing table if the message was for us.
-			Remember - the discovery REQUEST is broadcast, but the response is back
-			to the originator. The originator may not have a valid address yet,
-			but the local node may also have an invalid address. In both cases
-			we should update the routing table.
-		*/
+		nsmp_route_add(msg->hdr.src, msg->netif);
+		/* TODO - what can we do if an error is returned here? */
 
-		if (msg->hdr.dst == nsmp_get_address()) {
-			nsmp_route_add(msg->hdr.src, msg->netif);
-			/* TODO - what can we do if an error is returned here? */
+		if (seen_uid != -1) {
+			msg->netif = netif[seen_uid];
+			ret				 = nsmp_msg_send(msg);
+			/* TODO - handle the error, do not return it..*/
+		} else {
+			ret = nsmp_msg_broadcast_other(msg);
+			/* TODO - handle the error, do not return it..*/
 		}
 	}
 
