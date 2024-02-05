@@ -10,29 +10,28 @@
 	When a new node is connected to the network, it needs an address, but
 	it also needs to generate a routing table so it can transmit messages.
 
-	NSMP will transmit a discovery request on each network interface (when it
-	is registered for the first time). The request is sent as a broadcast message,
-	therefore reaching all nodes. Every node that receives a discovery request
-	must:
+	NSMP will transmit a discovery request on each network interface (when NSMP
+	is initialised with nsmp_init(). The discovery request is sent as a broadcast
+	message, therefore reaching all nodes in the network.
 
-		- Retransmit the broadcast on all other interfaces.
-		- Transmit a discovery response.
-
-	If the local node is also new to the network (has no address yet) then it
-	should process any discovery responses it receives - and update its
-	local routing table.
-
-	If a discovery REQUEST is received:
+	If a discovery REQUEST is received by the local node, it must:
 	- Reply with a discovery RESPONSE.
 	- Retransmit the request on all OTHER network interfaces.
 
-	If a discovery RESPONSE is received:
-	- Update the routing table with the source address and the network interface
-		used to receive the message.
+	If a discovery RESPONSE is received by the local node, it must:
+	- Update its local routing table with the senders address annd the
+	network interface that received the message.
 	- Retransmit the response back on the same network interface it was received
-	on, only if we have a cache of the UID from the original request.
+	on, but only when the local node has seen this discovery request before. And
+	never broadcast it! This will ensure that infinite retransmissions are
+	avoided.
 
-	Why is this important - it stops infinite retransmission loops.
+	The method implemented to remember requests is to keep a cache of the last 4
+	discovery requests. Every request contains a 128-bit pseudo-random number (a
+	UID), which is used to identify the request.
+
+	Normally we could just check the source address against the routing table,
+	but the source does not have an address yet!
 
 */
 
